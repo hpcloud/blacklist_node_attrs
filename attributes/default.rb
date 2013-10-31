@@ -1,3 +1,4 @@
+# vim: ts=2:sw=2:expandtab:
 #
 # Author:: Jon-Paul Sullivan
 # Copyright:: Copyright (c) 2013 Hewlett-Packard Development Company, L.P.

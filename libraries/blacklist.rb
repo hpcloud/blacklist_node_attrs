@@ -1,3 +1,4 @@
+# vim: ts=2:sw=2:expandtab:
 #
 # Author:: Jon-Paul Sullivan
 # Copyright:: Copyright (c) 2013 Hewlett-Packard Development Company, L.P.
@@ -82,45 +83,45 @@ class Blacklist
     new_blacklist = {}
     # Anchor the match key to make as safe as possible,
     # and convert from knife search to ruby regexp syntax
-    blacklist.each { |key, value|
-      new_blacklist["^" + key.gsub(/\*/, ".*").gsub(/\?/, ".") + "$"] = value
-    }
+    blacklist.each do |key, value|
+        new_blacklist["^" + key.gsub(/\*/, ".*").gsub(/\?/, ".") + "$"] = value
+      end
     blacklist = new_blacklist
 
     # Based on the stated rules, return true in the block for keys to delete from data
-    data.delete_if { |k, v|
-      # If the select on the blacklist hash returns an empty hash there are no keys
-      matches = blacklist.select { |bk, bv|
-        !k.match(bk).nil?
-      }
-      # Empty hash means no matching keys in the blacklist, so don't delete
-      next false if matches.empty?
+    data.delete_if do |k, v|
+        # If the select on the blacklist hash returns an empty hash there are no keys
+        matches = blacklist.select do |bk, bv|
+            !k.match(bk).nil?
+          end
+        # Empty hash means no matching keys in the blacklist, so don't delete
+        next false if matches.empty?
 
-      # Find the most specific match if more than one match was made
-      # Currently this simply uses the key of the longest length in the blacklist hash
-      key_length = 0
-      match = matches.select { |mk, mv|
-        if mk.length > key_length
-          key_length = mk.length
-          next true
+        # Find the most specific match if more than one match was made
+        # Currently this simply uses the key of the longest length in the blacklist hash
+        key_length = 0
+        match = matches.select do |mk, mv|
+            if mk.length > key_length
+              key_length = mk.length
+              next true
+            end
+            false
+          end.flatten
+
+        # match is now an array of [ key, value ] and value tells us what to do
+        if match[1].kind_of?(Hash)
+          # The blacklist value was a hash - descend!
+          data[k] = filter(data[k], match[1])
+          next false
+        else
+          # We are looking for true or false, true is easy, delete if the value is true
+          next true if !!match[1]
+          # Not true, so must be false
+          # Set to new object of the appropriate type (preserve type but drop contents)
+          data[k] = data[k].class.new
+          next false
         end
-        false
-      }.flatten
-
-      # match is now an array of [ key, value ] and value tells us what to do
-      if match[1].kind_of?(Hash)
-        # The blacklist value was a hash - descend!
-        data[k] = filter(data[k], match[1])
-        next false
-      else
-        # We are looking for true or false, true is easy, delete if the value is true
-        next true if !!match[1]
-        # Not true, so must be false
-        # Set to a new object of the appropriate type (preserve type but drop contents)
-        data[k] = data[k].class.new
-        next false
       end
-    }
   end
 end
 

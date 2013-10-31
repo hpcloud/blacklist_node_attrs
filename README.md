@@ -38,6 +38,62 @@ is included in the role.
 Whenever node.save is called, such as at the end of the run, the
 blacklist will be applied.
 
+Operation
+=======
+ * Key has either a Boolean value or a Hash as content
+   * Key == "xxx"
+     * The key is a string pattern to match on, as per knife search
+     * Wildcards are:
+       * '*' for 0 or more characters
+       * '?' for a single character
+   * Boolean == true
+     * Prune entire subtree *INCLUSIVE* of this key
+   * Boolean == false
+     * Prune entire subtree *EXCLUSIVE* of this key
+   * Hash == {}
+     * Descend to next level and don't prune this key
+
+```text
+Blacklist.filter(
+{
+  "network" => {
+    "interfaces" => {
+      "tapf7db623c-1b" => {},
+      "nldev.618" => {},
+      "tapf7db623c-1c" => {},
+      "tapf7db623c-1a" => {},
+      "nldev.617" => {"addresses" => "all"},
+      "nldev.619" => { "a" => "b" }
+    }
+  }
+}
+,
+{
+  "network" => {
+    "interfaces" => {
+      "tap*" => true,
+      "*" => {
+        "addresses" => false,
+        "mtu" => false,
+        "*" => true
+      }
+    }
+  }
+}
+
+
+Will return:
+{
+  "network" => {
+    "interfaces" => {
+      "nldev.618" => {},
+      "nldev.617" => {"addresses" => ""},
+      "nldev.619" => {}
+    }
+  }
+}
+```
+
 License and Author
 ==================
 
