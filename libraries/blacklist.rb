@@ -127,9 +127,11 @@ end
 
 class Chef
   class Node
-    alias_method :pre_blacklist_save, :save
+    alias pre_blacklist_save save unless method_defined?(:pre_blacklist_save)
 
     def save
+      return pre_blacklist_save unless self["blacklist"]
+
       Chef::Log.info("Blacklisting node attributes")
       blacklist = self["blacklist"].to_hash
 
