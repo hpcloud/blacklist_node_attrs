@@ -123,6 +123,11 @@ class Blacklist
         end
       end
   end
+  def self.deep_dup(attrs)
+    orig = attrs.to_hash
+    dup = Marshal.load(Marshal.dump(orig))
+    Mash.from_hash(dup)
+  end  
 end
 
 class Chef
@@ -134,10 +139,10 @@ class Chef
       blacklist = self["blacklist"].to_hash
 
       # Make a copy of the current node state
-      saved_default_attrs = self.default_attrs
-      saved_normal_attrs = self.normal_attrs
-      saved_override_attrs = self.override_attrs
-      saved_automatic_attrs = self.automatic_attrs
+      saved_default_attrs = Blacklist.deep_dup(self.default_attrs)
+      saved_normal_attrs = Blacklist.deep_dup(self.normal_attrs.to_hash)
+      saved_override_attrs = Blacklist.deep_dup(self.override_attrs.to_hash)
+      saved_automatic_attrs = Blacklist.deep_dup(self.automatic_attrs.to_hash)
 
       # Filter and save the node object
       self.default_attrs = Blacklist.filter(self.default_attrs, blacklist)
